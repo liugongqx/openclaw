@@ -32,3 +32,5 @@ external effect, copy real credentials into tests, or start a second orchestrati
 owner. Human credentials and consequential permissions remain human decisions.
 Upstream review, publishing, and release rules still apply; this harness does not
 grant permission to push, merge, or release.
+
+Synthetic protected-policy probe. This branch must not be merged.
