@@ -96,6 +96,15 @@ function evidenceExecutor(passed, changes) {
   };
 }
 
+test("a real subdirectory is not admitted as the repository root", () => {
+  const { workflow, directory } = fixture();
+  workflow.close();
+  assert.throws(
+    () => new DevelopmentWorkflow(join(directory, "src")),
+    errorCode("wrong_repository_root"),
+  );
+});
+
 function errorCode(code) {
   return (error) => error instanceof WorkflowError && error.code === code;
 }

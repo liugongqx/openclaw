@@ -54,7 +54,7 @@ completion, stale-build rejection, red-to-green verification, and invalidation a
 a later edit. No model, real account, or external website is used.
 
 The equivalent package commands are `pnpm test:dev-workflow`,
-`pnpm dev:workflow:demo`, and `pnpm dev:workflow -- <command>`.
+`pnpm dev:workflow:demo`, and `pnpm dev:workflow <command>`.
 
 ## Start a task
 

@@ -7,6 +7,7 @@ import {
   mkdirSync,
   readFileSync,
   realpathSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
@@ -273,11 +274,23 @@ export class DevelopmentWorkflow {
     this.processAlive = processAlive;
     const actual = this.git(["rev-parse", "--show-toplevel"]).trim();
     const canonicalRoot = realpathSync(actual);
-    requireThat(relative(this.root, canonicalRoot) === "", "wrong_repository_root");
+    const requestedStat = statSync(this.root, { bigint: true });
+    const actualStat = statSync(canonicalRoot, { bigint: true });
+    const sameDirectory =
+      requestedStat.ino !== 0n &&
+      requestedStat.ino === actualStat.ino &&
+      requestedStat.dev === actualStat.dev;
+    requireThat(
+      relative(this.root, canonicalRoot) === "" || sameDirectory,
+      "wrong_repository_root",
+      `Requested checkout ${this.root}; Git reported ${canonicalRoot}.`,
+    );
     this.root =
       process.platform === "win32"
         ? canonicalRoot.replace(/^[a-z]:/iu, (drive) => drive.toUpperCase())
         : canonicalRoot;
+    this.repositoryIdentity =
+      actualStat.ino !== 0n ? `${actualStat.dev}:${actualStat.ino}` : this.root;
     this.directory = join(this.root, ".local", "dev-workflow");
     mkdirSync(this.directory, { recursive: true });
     // Bootstrap tooling must work before package installation; this private ledger has one SQL owner.
@@ -347,7 +360,7 @@ export class DevelopmentWorkflow {
   source() {
     const head = this.head();
     return digest({
-      root: this.root,
+      repositoryIdentity: this.repositoryIdentity,
       head,
       diff: this.git(["diff", "--binary", "--no-ext-diff", "--no-textconv", "HEAD"]),
       untracked: this.git(["ls-files", "--others", "--exclude-standard", "-z"])

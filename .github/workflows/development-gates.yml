@@ -32,6 +32,8 @@ jobs:
           node-version: "24.22.0"
           package-manager-cache: false
       - name: Syntax and deliberate-failure contract tests
+        run: node --test --test-name-pattern="repository root|Windows drive-letter" scripts/dev-workflow.test.mjs
+      - name: Complete deliberate-failure contract tests
         run: node --test scripts/dev-workflow.test.mjs
       - name: Real isolated red-to-green HTTP acceptance demonstration
         run: node scripts/dev-workflow-demo.mjs
