@@ -27,6 +27,17 @@ Update instructions at their owner instead of adding competing rules here.
 
 ## Execution discipline
 
+### Fork development workflow
+
+For feature implementation in this fork, use the operator-approved contract and
+deterministic runner described in [Development workflow](docs/help/development-workflow.md).
+Repository Copilot hooks gate edits, execution, and completion against the active task.
+Read-only exploration does not require a task. The implementer cannot approve its own
+contract or weaken protected acceptance tests. A blocked checkpoint is not success.
+This is local development admission, not a replacement for upstream test-lane selection,
+PR review, merge, or release authority. The operator must verify hook discovery in the
+selected harness; instructions alone are not enforcement.
+
 - Root cause deep. Proof scoped.
 - Real failing entry point first. Bypassed boundary != proof.
 - Separate product bugs from tool/fixture failures.

@@ -1,0 +1,30 @@
+name: Protected development policy
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  policy:
+    name: Protected development policy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: "24.22.0"
+          package-manager-cache: false
+      - name: Compare candidate policy without executing candidate code
+        env:
+          DEV_POLICY_BASE: ${{ github.event.pull_request.base.sha }}
+          DEV_POLICY_HEAD: ${{ github.event.pull_request.head.sha }}
+          DEV_POLICY_PR: ${{ github.event.pull_request.number }}
+        run: node scripts/dev-workflow-policy.mjs

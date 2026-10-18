@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "id": "example-rendered-login",
+  "objective": "From a public page, reach the rendered login form before manual credential entry.",
+  "nonGoals": [
+    "Do not enter credentials or bypass provider restrictions.",
+    "Do not replace the existing browser owner.",
+    "Do not count an open tab or HTTP 200 as a completed login journey."
+  ],
+  "scope": [
+    "extensions/browser/src/browser/"
+  ],
+  "protectedPaths": [
+    "test/acceptance/rendered-login.mjs"
+  ],
+  "criteria": {
+    "rendered-login": "The intended sign-in form is visible after an actual navigation action.",
+    "manual-boundary": "No credentials were entered and automatic capture stops at takeover."
+  },
+  "checks": [
+    {
+      "id": "original-journey",
+      "argv": ["node", "test/acceptance/rendered-login.mjs"],
+      "timeoutSeconds": 120,
+      "criteria": ["rendered-login", "manual-boundary"]
+    }
+  ],
+  "budget": {
+    "minutes": 15,
+    "attempts": 5,
+    "toolCalls": 100
+  },
+  "runtime": {
+    "url": "http://127.0.0.1:18888/test-identity",
+    "expected": {
+      "instanceId": "synthetic-isolated-instance",
+      "dataDirId": "synthetic-test-directory-digest",
+      "profileId": "synthetic-test-profile",
+      "revision": "$HEAD",
+      "sourceDigest": "$SOURCE"
+    }
+  },
+  "regression": true
+}

@@ -1,0 +1,36 @@
+{
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "node scripts/dev-workflow.mjs hook sessionStart",
+        "powershell": "node scripts\\dev-workflow.mjs hook sessionStart",
+        "timeoutSec": 20
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "node scripts/dev-workflow.mjs hook preToolUse",
+        "powershell": "node scripts\\dev-workflow.mjs hook preToolUse",
+        "timeoutSec": 20
+      }
+    ],
+    "postToolUse": [
+      {
+        "type": "command",
+        "bash": "node scripts/dev-workflow.mjs hook postToolUse",
+        "powershell": "node scripts\\dev-workflow.mjs hook postToolUse",
+        "timeoutSec": 20
+      }
+    ],
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "node scripts/dev-workflow.mjs hook agentStop",
+        "powershell": "node scripts\\dev-workflow.mjs hook agentStop",
+        "timeoutSec": 20
+      }
+    ]
+  }
+}
