@@ -272,7 +272,12 @@ export class DevelopmentWorkflow {
     this.probe = probe;
     this.processAlive = processAlive;
     const actual = this.git(["rev-parse", "--show-toplevel"]).trim();
-    requireThat(realpathSync(actual) === this.root, "wrong_repository_root");
+    const canonicalRoot = realpathSync(actual);
+    requireThat(relative(this.root, canonicalRoot) === "", "wrong_repository_root");
+    this.root =
+      process.platform === "win32"
+        ? canonicalRoot.replace(/^[a-z]:/iu, (drive) => drive.toUpperCase())
+        : canonicalRoot;
     this.directory = join(this.root, ".local", "dev-workflow");
     mkdirSync(this.directory, { recursive: true });
     // Bootstrap tooling must work before package installation; this private ledger has one SQL owner.

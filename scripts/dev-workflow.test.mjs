@@ -100,6 +100,24 @@ function errorCode(code) {
   return (error) => error instanceof WorkflowError && error.code === code;
 }
 
+test(
+  "Windows drive-letter casing does not create a different repository identity",
+  { skip: process.platform !== "win32" },
+  () => {
+    const { workflow, directory } = fixture();
+    const source = workflow.source();
+    workflow.close();
+    const lowerDrive = directory.replace(/^[A-Z]:/u, (drive) => drive.toLowerCase());
+    const same = new DevelopmentWorkflow(lowerDrive);
+    try {
+      assert.equal(same.head().length, 40);
+      assert.equal(same.source(), source);
+    } finally {
+      same.close();
+    }
+  },
+);
+
 test("a real failing acceptance criterion is required before claiming a regression fix", async () => {
   const { workflow, contract } = fixture({ executor: evidenceExecutor(false) });
   try {
