@@ -7,6 +7,7 @@ import {
   mkdirSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   watch,
   writeFileSync,
 } from "node:fs";
@@ -103,6 +104,36 @@ test("a real subdirectory is not admitted as the repository root", () => {
     () => new DevelopmentWorkflow(join(directory, "src")),
     errorCode("wrong_repository_root"),
   );
+});
+
+test("an approved checkout alias admits its own file paths but not a symlink escape", () => {
+  const { workflow, directory, contract } = fixture();
+  workflow.close();
+  const alias = join(root, `alias-${fixtureNumber}`);
+  symlinkSync(directory, alias, "junction");
+  const same = new DevelopmentWorkflow(alias);
+  try {
+    same.approve(contract);
+    assert.equal(
+      same.hook("preToolUse", {
+        toolName: "edit",
+        toolArgs: { path: join(alias, "src", "app.mjs") },
+      }).permissionDecision,
+      "allow",
+    );
+    const outside = join(root, `outside-${fixtureNumber}`);
+    mkdirSync(outside);
+    symlinkSync(outside, join(directory, "src", "escape"), "junction");
+    assert.equal(
+      same.hook("preToolUse", {
+        toolName: "edit",
+        toolArgs: { path: join(alias, "src", "escape", "new.mjs") },
+      }).permissionDecision,
+      "deny",
+    );
+  } finally {
+    same.close();
+  }
 });
 
 function errorCode(code) {

@@ -10,7 +10,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { isAbsolute, join, relative, resolve, sep } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { fileURLToPath } from "node:url";
 
@@ -341,6 +341,38 @@ export class DevelopmentWorkflow {
 
   head() {
     return this.git(["rev-parse", "HEAD"]).trim();
+  }
+
+  pathInsideCheckout(input, directory = false) {
+    let existing = resolve(this.root, input);
+    const suffix = [];
+    while (!existsSync(existing)) {
+      const parent = dirname(existing);
+      requireThat(parent !== existing, "edit_outside_approved_scope");
+      suffix.unshift(basename(existing));
+      existing = parent;
+    }
+    if (!directory && suffix.length === 0) {
+      requireThat(!lstatSync(existing).isSymbolicLink(), "unsupported_source_type");
+      suffix.unshift(basename(realpathSync(existing)));
+      existing = dirname(existing);
+    }
+    const physicalParent = realpathSync(existing);
+    let ancestor = physicalParent;
+    for (;;) {
+      const identity = statSync(ancestor, { bigint: true });
+      if (
+        (identity.ino !== 0n && `${identity.dev}:${identity.ino}` === this.repositoryIdentity) ||
+        relative(this.root, ancestor) === ""
+      ) {
+        return join(relative(ancestor, physicalParent), ...suffix)
+          .split(sep)
+          .join("/");
+      }
+      const parent = dirname(ancestor);
+      requireThat(parent !== ancestor, "edit_outside_approved_scope");
+      ancestor = parent;
+    }
   }
 
   changed(base) {
@@ -810,13 +842,7 @@ export class DevelopmentWorkflow {
         !/--(?:output|ext-diff|textconv|exec-path|no-index|open-files-in-pager)\b/u.test(command));
     try {
       if (payload.cwd) {
-        const location = realpathSync(payload.cwd);
-        const within = relative(this.root, location);
-        requireThat(
-          location === this.root ||
-            (!isAbsolute(within) && within !== ".." && !within.startsWith(`..${sep}`)),
-          "wrong_hook_workspace",
-        );
+        this.pathInsideCheckout(payload.cwd, true);
       }
       if (event === "agentStop") {
         if (!id) {
@@ -881,7 +907,7 @@ export class DevelopmentWorkflow {
       }
       requireThat(paths.length > 0, "unrecognized_edit_payload");
       for (const path of paths) {
-        const normalized = relative(this.root, resolve(this.root, path)).split(sep).join("/");
+        const normalized = this.pathInsideCheckout(path);
         relativePath(normalized);
         requireThat(
           matches(normalized, contract.scope) &&
